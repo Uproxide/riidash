@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+	<name>RiiDash</name>
+	<coder>Uproxide, Cooper</coder>
+	<version>0.0.1</version>
+	<short_description>A GD fangame for the Wii.</short_description> 
+	<long_description>RiiDash (Riivolution Dash) is a Geometry Dash fangame made for the wii.</long_description> 
+</app>
+
