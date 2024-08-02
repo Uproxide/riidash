@@ -1,0 +1,6 @@
+build/
+build/*
+**/**.dol
+**/**.elf
+**-temp-app-package.zip
+**-app-package.zip

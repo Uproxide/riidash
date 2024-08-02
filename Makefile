@@ -25,15 +25,14 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-CXXFLAGS	=	$(CFLAGS)
-
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+CFLAGS = -g -O2 -Wall $(MACHDEP) $(INCLUDE) `freetype-config --cflags`
+CXXFLAGS = $(CFLAGS)
+LDFLAGS	= -g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lmad -lasnd -lwiisprite -lpng -lz -lwiiuse -lbte -lfat -logc -lm 
+LIBS := -lwiiuse -lmad -lasnd -lwiisprite -lpng -lz -lbte -lfat -logc -lm 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -58,11 +57,11 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 #---------------------------------------------------------------------------------
 # automatically build a list of object files for our project
 #---------------------------------------------------------------------------------
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+CFILES	 := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+sFILES	 := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+SFILES	 := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
+BINFILES := $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -88,7 +87,6 @@ export INCLUDE    :=    $(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
                     -I$(LIBOGC_INC) \
                     -I$(PORTLIBS_PATH)/wii/include \
                     -I$(PORTLIBS_PATH)/ppc/include \
-					-I$(PORTLIBS_PATH)/ppc/include/freetype2
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
@@ -105,17 +103,26 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-	@cp $(OUTPUT).dol $(CURDIR)/RiiDash/boot.dol
-	@rm -fr $(OUTPUT).dol
+	@cp $(OUTPUT).dol RiiDash/boot.dol
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol RiiDash/boot.dol $(TARGET).zip
 
 #---------------------------------------------------------------------------------
 run:
 	wiiload $(TARGET).dol
+
+
+#---------------------------------------------------------------------------------
+sendapp:
+	@cd RiiDash; if [ ! -f "boot.dol" ]; then echo "no boot.dol file found please run the make command"; exit 1; fi
+	@{ pacman -Q "zip" || pacman -S --noconfirm zip;};  { pacman -Q "unzip" || pacman -S --noconfirm unzip; }
+	@# now the reason the above code is on one line is because make runs each fucking command in its own bash instance thingy.
+	zip RiiDash.zip RiiDash/*
+	wiiload RiiDash.zip
+	@rm -rf RiiDash.zip
 
 
 #---------------------------------------------------------------------------------
@@ -136,6 +143,16 @@ $(OFILES_SOURCES) : $(HFILES)
 # This rule links in binary data with the .mp3 extension
 #---------------------------------------------------------------------------------
 %.mp3.o	%_mp3.h :	%.mp3
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	$(bin2o)
+
+-include $(DEPENDS)
+
+#---------------------------------------------------------------------------------
+# This rule links in binary data with the .ogg extension
+#---------------------------------------------------------------------------------
+%.ogg.o	%_ogg.h :	%.ogg
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	$(bin2o)
