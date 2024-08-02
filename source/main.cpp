@@ -12,26 +12,26 @@
 
 GameWindow gwd;
 
-Image cube;
-Image ground;
-Image oneSpeed;
-Image halfSpeed;
-Image block;
-Image yellowOrb;
+Image cube,
+      ground,
+      oneSpeed,
+      halfSpeed,
+      block,
+      yellowOrb;
 
-Sprite cubeSpr;
-Sprite groundSpr;
+Sprite cubeSpr,
+       groundSpr;
 
-Sprite object1;
-Sprite object2;
-Sprite object3;
-Sprite object4;
-Sprite object5;
-Sprite object6;
-Sprite object7;
-Sprite object8;
-Sprite object9;
-Sprite object10;
+Sprite object1,
+       object2,
+       object3,
+       object4,
+       object5,
+       object6,
+       object7,
+       object8,
+       object9,
+       object10;
 
 int cubeY = 350;
 int force = 14;
@@ -44,6 +44,17 @@ int frame = 0;
 int cubeOldY;
 
 bool jump = false;
+
+// Balance Board Shit (by cooper)
+bool balanceboardfirst = true;
+bool balanceboardDefaultModeOn = true;
+int balanceboardAFrames = 0;
+int balanceboardid;
+#define balanceboardAFramesToQuit 50
+#define balanceboardMinKG 13
+
+
+
 
 int main(int argc, char **argv) {
     Initialise();
@@ -98,6 +109,9 @@ int main(int argc, char **argv) {
         WPAD_ScanPads();
 		u32 pressed = WPAD_ButtonsDown(WPAD_CHAN_0);
         u32 held = WPAD_ButtonsHeld(WPAD_CHAN_0);
+        u32 pressedBalanceBoard = WPAD_ButtonsDown(WPAD_BALANCE_BOARD);
+        u32 heldBalanceBoard = WPAD_ButtonsHeld(WPAD_BALANCE_BOARD);
+        u32 upBalanceBoard = WPAD_ButtonsUp(WPAD_BALANCE_BOARD);
 
         if (groundPosX == -768) {
             groundPosX = 0;
@@ -105,10 +119,42 @@ int main(int argc, char **argv) {
             groundPosX -= speed;
         } // ground movement
 
-        if (pressed & WPAD_BUTTON_A) {
+        // - START OF GETTING BALANCE BOARD WEIGHT -
+        u32 devtype;
+        //(1) Check in which wiimotes expansion port the balance board is hiding in
+        for (int i=0;i<WPAD_MAX_WIIMOTES;i++) {	
+            WPAD_Probe(i,&devtype);
+            if (devtype==WPAD_EXP_WIIBOARD) balanceboardid=i; //(2) Save it
+        }
+        expansion_t exp;
+        WPAD_Expansion(balanceboardid, &exp); //(3) Extract the balance board struct
+        float weight = exp.wb.tl+exp.wb.tr+exp.wb.bl+exp.wb.br; // Wii Balance Board weight in kilograms
+        // - END OF GETTING BALANCE BOARD WEIGHT -
+
+        if ((pressed & WPAD_BUTTON_A) || (held & WPAD_BUTTON_A) || (((balanceboardMinKG > weight && balanceboardDefaultModeOn == true) || (balanceboardMinKG <= weight && balanceboardDefaultModeOn == false)) && balanceboardfirst == false)) {
             if (!jump) {
                 jump = true; // jump if jump = false and Button A is pressed
             } 
+        }
+
+        if ((balanceboardMinKG <= weight && balanceboardfirst == true && balanceboardDefaultModeOn == true) || (balanceboardMinKG <= weight && balanceboardfirst == true && balanceboardDefaultModeOn == false)) {
+            balanceboardfirst = false;
+        }
+
+        if (pressedBalanceBoard & WPAD_BUTTON_A) {
+            balanceboardDefaultModeOn = !balanceboardDefaultModeOn;
+            balanceboardfirst = true;
+        }
+
+        if (upBalanceBoard & WPAD_BUTTON_A) {
+            if (balanceboardAFramesToQuit <= balanceboardAFrames) {
+                exit(69);
+            } else {
+                balanceboardAFrames = 0;
+            }
+        }
+        if (heldBalanceBoard & WPAD_BUTTON_A) {
+            balanceboardAFrames += 1;
         }
 
         if (pressed & WPAD_BUTTON_HOME) {
@@ -141,6 +187,7 @@ int main(int argc, char **argv) {
                 cubeSpr.SetY(cubeOldY);
             }
         }
+        
         if (cubeSpr.CollidesWith(&object2)) {
             if (object2.GetImage() == &halfSpeed) {
                 speed = 3; // set speed 3 (half) if touch half speed portal

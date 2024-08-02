@@ -1,0 +1,40 @@
+{
+    "env": {
+        "betterDevKitProShit": "C:/devkitpro",
+        "defaultIncludePath": [
+            "${workspaceFolder}/include/**"
+        ],
+        "defaultDefines": [],
+        "rvlIncludePaths": [
+            "${env:betterDevKitProShit}/portlibs/ppc/include/**",
+            "${env:betterDevKitProShit}/portlibs/wii/include/**",
+            "${env:betterDevKitProShit}/libogc/include/**"
+        ],
+        "rvlDefines": [
+            "HW_RVL",
+            "GEKKO"
+        ],
+        "ppcCompilerPath": "${env:betterDevKitProShit}/devkitPPC/bin/powerpc-eabi-g++"
+    },
+    "configurations": [
+        {
+            "name": "Wii",
+            "includePath": [
+                "${env:defaultIncludePath}",
+                "${env:rvlIncludePaths}"
+            ],
+            "defines": [
+                "${env:defaultDefines}",
+                "${env:rvlDefines}",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "${env:ppcCompilerPath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-arm"
+        }
+    ],
+    "version": 4
+}
